@@ -11,3 +11,120 @@ generator client {
 datasource db {
     provider = "postgresql"
 }
+
+model User {
+    id       Int     @id @default(autoincrement())
+    name     String
+    email    String  @unique
+    password String?
+
+    emailVerified Boolean @default(false)
+
+    github_events GithubEvents[]
+    vscode_events VsCodeEvent[]
+
+    createdAt DateTime  @default(now())
+    updatedAt DateTime  @updatedAt
+    accounts  Account[]
+    sessions  Session[]
+}
+
+model Account {
+    id     Int  @id @default(autoincrement())
+    userid User @relation(fields: [userId], references: [id])
+    userId Int
+
+    provider          String
+    providerAccountId String
+    access_token      String?
+    refresh_token     String?
+
+    id_token  String?
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    @@unique([provider, providerAccountId])
+}
+
+model Session {
+    id     Int  @id @default(autoincrement())
+    userid User @relation(fields: [userId], references: [id])
+
+    userId Int
+
+    refresh_token String
+    expiresAt     DateTime
+    createdAt     DateTime @default(now())
+}
+
+model GithubEvents {
+    id            Int     @id @default(autoincrement())
+    username      String
+    event_type    String
+    repo_name     String
+    repo_url      String
+    branch        String?
+    master_branch String?
+    description   String?
+
+    commit_hash_head   String?
+    commit_hash_before String?
+
+    user          User?          @relation(fields: [userId], references: [id])
+    userId        Int?
+    createdAt     DateTime       @default(now())
+    updatedAt     DateTime       @updatedAt
+    githubCommits GithubCommit[]
+}
+
+model GithubCommit {
+    id  Int    @id @default(autoincrement())
+    sha String
+
+    commit_msg String
+    total      Int
+    addition   Int
+    deletion   Int
+
+    event          GithubEvents @relation(fields: [githubEventsId], references: [id])
+    githubEventsId Int
+    userId         Int?
+    createdAt      DateTime     @default(now())
+    updatedAt      DateTime     @updatedAt
+
+    files File[]
+}
+
+model File {
+    id       Int    @id @default(autoincrement())
+    filename String
+    addition Int
+    deletion Int
+    changes  Int
+    blob_url String
+    raw_url  String
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    githubCommit   GithubCommit? @relation(fields: [githubCommitId], references: [id])
+    githubCommitId Int?
+
+    vsCodeEventId Int?
+}
+
+model VsCodeEvent {
+    id            Int      @id @default(autoincrement())
+    project_name  String
+    language      String
+    time          Int
+    branch        String
+    session_start DateTime
+    session_end   DateTime
+
+    user   User? @relation(fields: [userId], references: [id])
+    userId Int?
+
+    createdAt DateTime @default(now())
+    updatedAT DateTime @updatedAt
+}
