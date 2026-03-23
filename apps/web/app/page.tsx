@@ -1,6 +1,11 @@
+'use client';
+
+import { Landing } from './Landing';
 
 export default function Home() {
-    return (
-        <div className="text-2xl">DevLog</div>
-    );
+  return (
+    <div>
+      <Landing />
+    </div>
+  );
 }
