@@ -4,6 +4,14 @@ import Link from 'next/link';
 import { Header } from './components/Header';
 
 export const Landing = () => {
+  const handleGoogle = async () => {
+    window.location.href = 'http://localhost:5000/api/auth/google';
+  };
+
+  const handleGithub = async () => {
+    window.location.href = 'http://localhost:5000/api/auth/github';
+  };
+
   return (
     <div className='bg-black h-screen text-white '>
       <Header />
@@ -14,12 +22,18 @@ export const Landing = () => {
         </Link>
         <br />
 
-        <button className='text-2xl font-medium cursor-pointer mt-8'>
+        <button
+          className='text-2xl font-medium cursor-pointer mt-8'
+          onClick={handleGoogle}
+        >
           Sign in with Google
         </button>
 
         <br />
-        <button className='text-2xl font-medium cursor-pointer mt-8'>
+        <button
+          className='text-2xl font-medium cursor-pointer mt-8'
+          onClick={handleGithub}
+        >
           Sign in with Github
         </button>
       </div>
