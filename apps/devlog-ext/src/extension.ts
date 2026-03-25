@@ -11,6 +11,15 @@ export function activate(context: vscode.ExtensionContext) {
   );
 
   context.subscriptions.push(disposable);
+
+  const loginDisposable = vscode.commands.registerCommand(
+    'devlog-ext.login',
+    () => {
+      vscode.window.showInformationMessage('Login to Devlog!');
+    },
+  );
+
+  context.subscriptions.push(loginDisposable);
 }
 
 export function deactivate() {}

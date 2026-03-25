@@ -12,10 +12,18 @@
   "activationEvents": [],
   "main": "./out/extension.js",
   "contributes": {
+    "configuration":{
+        "title": "",
+        "properties": {}
+    },
     "commands": [
-      {
+     {
         "command": "devlog-ext.helloWorld",
         "title": "Hello World"
+     },
+      {
+        "command": "devlog-ext.login",
+        "title": "Login"
       }
     ]
   },
@@ -26,6 +34,9 @@
     "pretest": "pnpm run compile && pnpm run lint",
     "lint": "eslint src",
     "test": "vscode-test"
+  },
+   "dependencies": {
+    "simple-git": "^3.27.0"
   },
   "devDependencies": {
     "@types/jest": "^30.0.0",
