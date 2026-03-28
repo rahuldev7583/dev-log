@@ -9,21 +9,23 @@
   "categories": [
     "Other"
   ],
-  "activationEvents": [],
+  "activationEvents": [
+    "onCommand:devlog-ext.login"
+  ],
   "main": "./out/extension.js",
   "contributes": {
-    "configuration":{
-        "title": "",
-        "properties": {}
+    "configuration": {
+      "title": "Devlog",
+      "properties": {}
     },
     "commands": [
-     {
+      {
         "command": "devlog-ext.helloWorld",
         "title": "Hello World"
-     },
+      },
       {
         "command": "devlog-ext.login",
-        "title": "Login"
+        "title": "Devlog: Login"
       }
     ]
   },
@@ -35,12 +37,10 @@
     "lint": "eslint src",
     "test": "vscode-test"
   },
-   "dependencies": {
-    "simple-git": "^3.27.0"
+  "dependencies": {
+    "simple-git": "^3.33.0"
   },
   "devDependencies": {
-    "@types/jest": "^30.0.0",
-    "@types/mocha": "^10.0.10",
     "@types/node": "~22.15.3",
     "@types/vscode": "^1.110.0",
     "@vscode/test-cli": "^0.0.12",

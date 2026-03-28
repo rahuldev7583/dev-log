@@ -5,7 +5,8 @@ export interface VsEvent {
   duration: number;
   branch: string;
   language: string;
-  start_time: string;
+  start_time: Date;
+  sync_status: 'synced' | 'pending' | 'failed';
 }
 
 export class Database {
@@ -28,9 +29,14 @@ export class Database {
     duration: number,
     branch: string,
     language: string,
-    start_time: string,
+    start_time: Date,
   ) {
+    vscode.window.showInformationMessage('add event called');
     if (duration <= 0) {
+      vscode.window.showInformationMessage(
+        `Duration ${duration} is not valid for ${project}/${branch}/${branch}`,
+      );
+
       console.warn(
         `Duration ${duration} is not valid for ${project}/${branch}/${branch}`,
       );
@@ -48,12 +54,26 @@ export class Database {
       });
 
       if (existingEvent) {
+        vscode.window.showInformationMessage('add to existingEvent');
         existingEvent.duration += duration;
       } else {
-        events.push({ project, duration, branch, language, start_time });
+        events.push({
+          project,
+          duration,
+          branch,
+          language,
+          start_time,
+          sync_status: 'pending',
+        });
+        vscode.window.showInformationMessage('new event created');
       }
+      console.log({ events });
 
       await this.updateEvent(events);
+
+      vscode.window.showInformationMessage(
+        `Saved ${duration} duration for project: ${project}, branch:${branch}, language:${language} which started on ${start_time}`,
+      );
       console.log(
         `Saved ${duration} duration for project: ${project}, branch:${branch}, language:${language} which started on ${start_time}`,
       );
@@ -73,9 +93,15 @@ export class Database {
     this.events = events;
 
     await this.context.globalState.update('events', events);
+
+    vscode.window.showInformationMessage('Update Event');
   }
+
   async clearAllData() {
-    //check sync status is synced and clear data
+    const remaining = this.events.filter((e) => e.sync_status !== 'synced');
+
+    this.events = remaining;
+    vscode.window.showInformationMessage('clear all unsynced Data');
   }
 
   async syncWithBackend() {
