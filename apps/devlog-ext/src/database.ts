@@ -1,6 +1,10 @@
+import axios from 'axios';
+import { UUID } from 'crypto';
+
 import * as vscode from 'vscode';
 
 export interface VsEvent {
+  session_id: UUID;
   project: string;
   duration: number;
   branch: string;
@@ -22,24 +26,25 @@ export class Database {
     }
 
     this.events = context.globalState.get('events') || [];
+
+    //context.globalState.update("events", []);
+
+    //this.events = [];
   }
 
   async addEvent(
+    session_id: UUID,
     project: string,
     duration: number,
     branch: string,
     language: string,
     start_time: Date,
   ) {
-    vscode.window.showInformationMessage('add event called');
     if (duration <= 0) {
       vscode.window.showInformationMessage(
-        `Duration ${duration} is not valid for ${project}/${branch}/${branch}`,
+        `Devlog: Duration ${duration} is not valid for ${project}/${branch}/${branch}`,
       );
 
-      console.warn(
-        `Duration ${duration} is not valid for ${project}/${branch}/${branch}`,
-      );
       return;
     }
 
@@ -47,17 +52,16 @@ export class Database {
       const events = this.getEVents();
 
       const existingEvent = events.find((entry) => {
-        entry.branch === branch &&
-          entry.language === language &&
-          entry.project === project &&
-          entry.start_time === start_time;
+        return entry.session_id === session_id;
       });
 
       if (existingEvent) {
-        vscode.window.showInformationMessage('add to existingEvent');
+        //vscode.window.showInformationMessage('add to existingEvent');
         existingEvent.duration += duration;
+        existingEvent.sync_status = 'pending';
       } else {
         events.push({
+          session_id: session_id,
           project,
           duration,
           branch,
@@ -65,18 +69,15 @@ export class Database {
           start_time,
           sync_status: 'pending',
         });
-        vscode.window.showInformationMessage('new event created');
+
+        //vscode.window.showInformationMessage('new event created');
       }
-      console.log({ events });
 
       await this.updateEvent(events);
 
-      vscode.window.showInformationMessage(
-        `Saved ${duration} duration for project: ${project}, branch:${branch}, language:${language} which started on ${start_time}`,
-      );
-      console.log(
-        `Saved ${duration} duration for project: ${project}, branch:${branch}, language:${language} which started on ${start_time}`,
-      );
+      //  vscode.window.showInformationMessage(
+      //    `Saved ${duration} duration for project: ${project}, branch:${branch}, language:${language} which started on ${start_time}`,
+      //  );
     });
 
     await this.writeQueue;
@@ -84,7 +85,7 @@ export class Database {
 
   getEVents(): VsEvent[] {
     if (!this.events) {
-      this.context.globalState.get('events', []);
+      this.events = this.context.globalState.get('events', []) || [];
     }
     return this.events;
   }
@@ -94,20 +95,86 @@ export class Database {
 
     await this.context.globalState.update('events', events);
 
-    vscode.window.showInformationMessage('Update Event');
+    //vscode.window.showInformationMessage('Update Event');
   }
 
-  async clearAllData() {
+  clearAllData() {
     const remaining = this.events.filter((e) => e.sync_status !== 'synced');
 
     this.events = remaining;
-    vscode.window.showInformationMessage('clear all unsynced Data');
+    vscode.window.showInformationMessage('Devlog: clear all synced Data');
   }
 
   async syncWithBackend() {
-    //get all pending event call backend fetch post req to store
-    //marked as synced to all pending
-    //call clearAllData
-    //update events
+    const config = vscode.workspace.getConfiguration('devlogTracker');
+    const API_URL = config.get<string>('apiUrl');
+
+    try {
+      const extToken = await this.context.secrets
+        .get('extToken')
+        .then((value) => value);
+
+      if (!extToken) {
+        vscode.window.showInformationMessage('Devlog: Token not defined');
+
+        return;
+      }
+
+      const events = this.events;
+
+      if (events.length > 0) {
+        const isISOFormat = (dateString: any) => {
+          const isoRegExp = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{3})?Z$/;
+          return isoRegExp.test(dateString);
+        };
+
+        const filteredEvent: any = events.map((e) => {
+          return {
+            project_name: e.project,
+            branch: e.branch,
+            language: e.language,
+            session_start: isISOFormat(e.start_time)
+              ? e.start_time
+              : e.start_time.toISOString(),
+            session_id: e.session_id,
+            time: e.duration,
+          };
+        });
+
+        const res = await axios.post(
+          `${API_URL}/api/vscode-event/add`,
+          filteredEvent,
+          {
+            headers: {
+              Authorization: `Bearer ${extToken}`,
+            },
+          },
+        );
+
+        if (res.status === 200) {
+          this.events = events.map((e) => {
+            let index = res.data.syncedEvent.findIndex(
+              (ev: any) => ev.session_id === e.session_id,
+            );
+
+            if (index >= 0) {
+              e.sync_status = 'synced';
+              return e;
+            }
+            return e;
+          });
+
+          vscode.window.showInformationMessage(
+            'Devlog: Event synced to Backend Successfully',
+          );
+        }
+      }
+    } catch (error: any) {
+      vscode.window.showErrorMessage(
+        error?.response?.data?.message || 'Devlog:  Event Sync failed',
+      );
+
+      return;
+    }
   }
 }

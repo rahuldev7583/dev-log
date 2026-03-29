@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import { Database } from './database';
 import { simpleGit, SimpleGit } from 'simple-git';
 import { getLanguageFromLanguageId } from './utils';
+import { randomUUID, UUID } from 'crypto';
 
 type GitWatcher = {
   git: SimpleGit;
@@ -30,6 +31,8 @@ export class EventTracker implements vscode.Disposable {
   private lastUpdateTime: number = Date.now();
   private lastFocusTime: number = Date.now();
   private lastSaveTime: number = 0;
+
+  private currentSessionId: UUID | null = null;
 
   constructor(database: Database) {
     this.database = database;
@@ -66,7 +69,9 @@ export class EventTracker implements vscode.Disposable {
           if (this.isTracking) {
             await this.saveCurrentSession('window focus gained');
           }
-          await this.startTracking('Focus regained');
+          if (!this.isTracking) {
+            await this.startTracking('Focus regained');
+          }
         }
 
         this.lastFocusTime = now;
@@ -97,21 +102,18 @@ export class EventTracker implements vscode.Disposable {
   private updateCurrentBranch() {
     try {
       const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
-      console.log({ workspaceFolder });
 
       if (!workspaceFolder) {
         this.currentBranch = 'unknown';
       }
 
       const git = simpleGit(workspaceFolder?.uri.fsPath);
-      console.log({ git });
 
       if (!git) {
         this.currentBranch = 'unknown';
       }
 
       const branchInfo = git.branch();
-      console.log({ branchInfo });
 
       if (!branchInfo) {
         this.currentBranch = 'unknown';
@@ -123,6 +125,7 @@ export class EventTracker implements vscode.Disposable {
       console.log('Branch error');
 
       this.currentBranch = 'unknown';
+      return;
     }
   }
 
@@ -149,7 +152,9 @@ export class EventTracker implements vscode.Disposable {
         this.isTracking &&
         inactivityDuration >= this.inactivityTimeoutSeconds * 1000
       ) {
-        vscode.window.showInformationMessage('Stop tracking due to inactivity');
+        vscode.window.showInformationMessage(
+          'Devlog: Stop tracking due to inactivity',
+        );
 
         this.stopTracking('inactivity');
       }
@@ -162,7 +167,9 @@ export class EventTracker implements vscode.Disposable {
 
   public async updateCursorActivity() {
     if (!this.isTracking) {
-      vscode.window.showInformationMessage('Start tracking by cursor activity');
+      vscode.window.showInformationMessage(
+        'Devlog:  Start tracking by cursor activity',
+      );
       await this.startTracking('cursor activity');
 
       return;
@@ -180,13 +187,21 @@ export class EventTracker implements vscode.Disposable {
   }
 
   async startTracking(reason: string) {
-    vscode.window.showInformationMessage(`Tracking Started reason: ${reason}`);
+    if (this.isTracking) {
+      this.lastCursorActivity = Date.now();
+      return;
+    }
+    vscode.window.showInformationMessage(
+      `Devlog:  Tracking Started due to: ${reason}`,
+    );
 
     const now = Date.now();
     this.isTracking = true;
     this.startTime = now;
     this.lastUpdateTime = now;
     this.lastFocusTime = now;
+
+    this.currentSessionId = randomUUID();
 
     this.updateCurrentBranch();
     this.updateCurrentLanguage();
@@ -202,12 +217,8 @@ export class EventTracker implements vscode.Disposable {
     }
 
     this.setupCursorTracking();
-    vscode.window.showInformationMessage(
-      'cursor tracking and about to setupGitwatcher',
-    );
-    await this.setupGitwatcher();
 
-    vscode.window.showInformationMessage('setupGitwatcher completed');
+    await this.setupGitwatcher();
   }
 
   async stopTracking(reason?: string) {
@@ -224,13 +235,15 @@ export class EventTracker implements vscode.Disposable {
         this.cursorInactivityTimeout = null;
       }
 
-      this.saveCurrentSession();
+      await this.saveCurrentSession();
+
+      this.currentSessionId = null;
 
       this.lastSaveTime = 0;
 
       await this.stopGitWatcher();
 
-      vscode.window.showInformationMessage('Tracking Stopped');
+      vscode.window.showInformationMessage('Devlog: Tracking Stopped');
     }
   }
 
@@ -239,12 +252,8 @@ export class EventTracker implements vscode.Disposable {
     let duration =
       Math.round(((now - this.startTime) / (1000 * 60)) * 10000) / 10000;
 
-    console.log({
-      duration: duration,
-      branch: this.currentBranch,
-    });
     vscode.window.showInformationMessage(
-      `saving current session reason: ${reason}`,
+      `Devlog: saving current session due to: ${reason}`,
     );
 
     if (reason === 'inactivity') {
@@ -254,15 +263,18 @@ export class EventTracker implements vscode.Disposable {
     }
 
     if (duration > 0) {
+      const session_id: any = this.currentSessionId;
+
       await this.database.addEvent(
+        session_id,
         this.currentProject,
         Number(duration.toFixed(4)),
         this.currentBranch || 'unknown',
         this.currentLanguage,
-        new Date(),
+        new Date(this.startTime),
       );
 
-      vscode.window.showInformationMessage('Event saved to local DB');
+      //  vscode.window.showInformationMessage('Devlog: Event saved to local DB');
     }
     this.startTime = now;
     this.lastSaveTime = now;
@@ -271,6 +283,8 @@ export class EventTracker implements vscode.Disposable {
   dispose() {
     this.stopTracking();
     this.stopGitWatcher();
+
+    this.database.clearAllData();
   }
 
   isActive() {
@@ -285,21 +299,21 @@ export class EventTracker implements vscode.Disposable {
       : undefined;
 
     if (!workspace) {
-      vscode.window.showInformationMessage('Not a valid workspace');
+      vscode.window.showInformationMessage('Devlog: Not a valid workspace');
       return;
     }
 
     const git = simpleGit(workspace?.uri.path);
 
     if (!git) {
-      vscode.window.showInformationMessage('Not a valid git ');
+      vscode.window.showInformationMessage('Devlog: Not a valid git');
       return;
     }
 
     const isValidRepo = await git.checkIsRepo();
 
     if (!isValidRepo) {
-      vscode.window.showInformationMessage('Not a valid git repo ');
+      vscode.window.showInformationMessage('Devlog: Not a valid git repo');
       return;
     }
 
@@ -316,7 +330,7 @@ export class EventTracker implements vscode.Disposable {
 
     this.branchCheckInterval = branchInterval;
 
-    vscode.window.showInformationMessage('setup git watcher');
+    //vscode.window.showInformationMessage('setup git watcher');
   }
 
   async checkBranchChanges() {
@@ -330,17 +344,8 @@ export class EventTracker implements vscode.Disposable {
 
         const current_branch = branch?.current || 'unknown';
 
-        console.log({
-          current_branch,
-          branch: this.gitWatcher?.lastKnownBranch,
-        });
-
         if (current_branch !== this.gitWatcher?.lastKnownBranch) {
           await this.saveCurrentSession('Branch Changes');
-
-          vscode.window.showInformationMessage(
-            'Branch Changes after saveCurrentSession called',
-          );
 
           this.gitWatcher
             ? (this.gitWatcher.lastKnownBranch = current_branch)
@@ -349,9 +354,12 @@ export class EventTracker implements vscode.Disposable {
           this.currentBranch = current_branch;
 
           this.startTime = Date.now();
+
+          this.currentSessionId = randomUUID();
         }
       } catch (error) {
         console.error('Error checking branch changes:', error);
+        return;
       } finally {
         this.branchCheckPromise = null;
       }
@@ -361,7 +369,7 @@ export class EventTracker implements vscode.Disposable {
 
     await this.branchCheckPromise;
 
-    vscode.window.showInformationMessage('Branch changes Task running');
+    vscode.window.showInformationMessage('Devlog: Branch changes Task running');
   }
 
   stopGitWatcher() {
