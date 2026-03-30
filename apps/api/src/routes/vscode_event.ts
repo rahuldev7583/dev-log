@@ -1,57 +1,79 @@
 import express, { Router } from 'express';
 import { validateData } from '../middleware/Validation';
-import { vsCodeEvent } from '../schema/vs-code-event';
+import { vsCodeEvent, vsCodeEventArr } from '../schema/vs-code-event';
 import { prisma } from '../lib/prisma';
 
 const router: Router = express.Router();
+
+export const user_router: Router = express.Router();
 
 router.get('/', (req, res) => {
   res.json({ message: 'Vs Code Event endpoints' });
 });
 
-router.post('/add', validateData(vsCodeEvent), async (req: any, res) => {
-  const req_body = req.body;
+router.post('/add', validateData(vsCodeEventArr), async (req: any, res) => {
+  try {
+    const syncedEvent = [];
+    const eventArr = req.body;
 
-  const session_start = new Date(req_body.session_start);
-  const session_end = new Date(req_body.session_end);
+    if (!eventArr) {
+      return res.status(400).json({ message: 'Empty events' });
+    }
 
-  if (session_end <= session_start) {
-    return res
-      .status(400)
-      .json({ message: 'Session start must be smaller than session end' });
-  }
+    for (let i = 0; i < eventArr.length; i++) {
+      const new_event = await prisma.vsCodeEvent.upsert({
+        where: {
+          session_id: eventArr[i].session_id,
+        },
+        update: {
+          time: eventArr[i].time,
+        },
+        create: {
+          project_name: eventArr[i].project_name,
+          language: eventArr[i].language,
+          branch: eventArr[i].branch,
+          time: eventArr[i].time,
+          session_start: eventArr[i].session_start,
+          session_id: eventArr[i].session_id,
+          userId: req.user.id,
+        },
+      });
 
-  const event = await prisma.vsCodeEvent.findFirst({
-    where: {
-      session_start: req_body.session_start,
-    },
-  });
+      syncedEvent.push({
+        session_id: new_event.session_id,
+        sync_status: 'synced',
+      });
+    }
 
-  if (event) {
-    return res.status(400).json({
-      message: 'Event with this session start time already exist',
+    return res.json({
+      message: 'Vs Code event synced successfully',
+      syncedEvent,
     });
+  } catch (error) {
+    console.log({ error });
+
+    return res.status(400).json({ message: 'Error ' });
   }
-
-  const new_event = await prisma.vsCodeEvent.create({
-    data: {
-      project_name: req_body.project_name,
-      language: req_body.language,
-      branch: req_body.branch,
-      time: req_body.time,
-      session_start: req_body.session_start,
-      session_end: req_body.session_end,
-      userId: req.user.id,
-    },
-  });
-
-  res.json({ message: 'Vs Code event created successfully', data: new_event });
 });
 
-router.get('/get', async (req, res) => {
-  const events = await prisma.vsCodeEvent.findMany();
+user_router.get('/', async (req: any, res) => {
+  const user = req.user;
 
-  res.json({ message: 'Vs Code events fetched successfully', data: events });
+  try {
+    const events = await prisma.vsCodeEvent.findMany({
+      where: {
+        userId: user.id,
+      },
+    });
+
+    return res.json({
+      message: 'Vs Code events fetched successfully',
+      data: events,
+    });
+  } catch (error) {
+    console.log({ error });
+    return res.json({ message: 'Vs Code event fetching failed' });
+  }
 });
 
 export default router;

@@ -117,10 +117,10 @@ model VsCodeEvent {
     id            Int      @id @default(autoincrement())
     project_name  String
     language      String
-    time          Int
+    time          Float
     branch        String
     session_start DateTime
-    session_end   DateTime
+    session_id    String   @unique
 
     user   User? @relation(fields: [userId], references: [id])
     userId Int?

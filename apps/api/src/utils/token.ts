@@ -11,10 +11,41 @@ export const generateToken = (payload: any) => {
 };
 
 export const verifyToken = (token: any) => {
-  const secret = process.env.JWT_SECRET;
-  if (!secret) return 'JWT Secret not defined';
+  try {
+    const secret = process.env.JWT_SECRET;
+    if (!secret) return 'JWT Secret not defined';
 
-  const decode = jwt.verify(token, secret);
+    const decode = jwt.verify(token, secret);
 
-  return decode;
+    return decode;
+  } catch (error) {
+    return false;
+  }
+};
+
+export const generateExtensionToken = (payload: any) => {
+  const secret = process.env.JWT_EXTENSION_SECRET;
+
+  if (!secret) return 'JWT extension Secret not defined';
+
+  try {
+    const token = jwt.sign(payload, secret, { expiresIn: '7Days' });
+
+    return token;
+  } catch (error) {
+    return false;
+  }
+};
+
+export const verifyExtensionToken = (token: any) => {
+  const secret = process.env.JWT_EXTENSION_SECRET;
+  if (!secret) return 'JWT extension Secret not defined';
+
+  try {
+    const decode = jwt.verify(token, secret);
+
+    return decode;
+  } catch (error) {
+    return false;
+  }
 };
