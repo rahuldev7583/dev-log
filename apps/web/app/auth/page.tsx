@@ -1,43 +1,14 @@
-'use client';
-import React, { useState } from 'react';
-import { Header } from '../components/Header';
-import Signup from '../components/Signup';
-import Login from '../components/Login';
+import React, { Suspense } from 'react';
 
-const AuthPage = () => {
-  const [showSignup, setShowSignup] = useState(false);
+import Loader from '../components/Loader';
+import AuthPage from './auth';
 
+const page = () => {
   return (
-    <div className='bg-black h-screen text-white'>
-      <Header />
-
-      {!showSignup && (
-        <>
-          <Login />
-          <button
-            className='cursor-pointer ml-[48%]'
-            type='button'
-            onClick={() => setShowSignup(true)}
-          >
-            Signup
-          </button>
-        </>
-      )}
-
-      {showSignup && (
-        <>
-          <Signup />
-          <button
-            className='cursor-pointer ml-[48%]'
-            type='button'
-            onClick={() => setShowSignup(false)}
-          >
-            Login
-          </button>
-        </>
-      )}
-    </div>
+    <Suspense fallback={<Loader />}>
+      <AuthPage />
+    </Suspense>
   );
 };
 
-export default AuthPage;
+export default page;

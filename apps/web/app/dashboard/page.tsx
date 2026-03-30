@@ -1,13 +1,13 @@
-import React from 'react';
-import { Header } from '../components/Header';
+import React, { Suspense } from 'react';
+import Dashboard from './dashboard';
+import Loader from '../components/Loader';
 
-const Dashboard = () => {
+const page = () => {
   return (
-    <div className='bg-black h-screen text-white '>
-      <Header />
-      <h1>User Dashboard </h1>
-    </div>
+    <Suspense fallback={<Loader />}>
+      <Dashboard />
+    </Suspense>
   );
 };
 
-export default Dashboard;
+export default page;
