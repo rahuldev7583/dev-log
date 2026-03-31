@@ -283,28 +283,25 @@ export const extractLanguageData = (events: any[]) => {
   }
 
   const langMap = new Map<string, number>();
-  let totalMinutes = 0;
 
   events.forEach((e) => {
     const lang = e.language || 'Unknown';
     const minutes = Number(e.time) || 0;
     langMap.set(lang, (langMap.get(lang) || 0) + minutes);
-    totalMinutes += minutes;
   });
 
   const sorted = Array.from(langMap.entries())
     .map(([lang, minutes]) => ({
       lang,
-      percent:
-        totalMinutes > 0 ? Math.round((minutes / totalMinutes) * 100) : 0,
+      hours: minutes / 60,
     }))
-    .sort((a, b) => b.percent - a.percent);
+    .sort((a, b) => b.hours - a.hours);
 
   const defaultColors = ['#3178C6', '#FFD43B', '#DEA584', '#61DAFB', '#00f5a0'];
 
   return {
     labels: sorted.map((s) => s.lang),
-    data: sorted.map((s) => s.percent),
+    data: sorted.map((s) => Number(s.hours.toFixed(2))),
     colors: sorted.map((_, i) => defaultColors[i % defaultColors.length]),
     title: 'Time by Language • Last 30 days',
   };

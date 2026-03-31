@@ -184,6 +184,7 @@ export const TimeByLanguageChart: React.FC<LanguageChartProps> = ({
 
     return () => chart.destroy();
   }, [labels, data, colors]);
+  const total = data.reduce((a, b) => a + b, 0);
 
   return (
     <div className='bg-zinc-900 rounded-3xl pl-20 pt-6 pr-6 pb-6'>
@@ -201,9 +202,11 @@ export const TimeByLanguageChart: React.FC<LanguageChartProps> = ({
                 style={{ backgroundColor: colors[i] }}
               />
               <span className='font-mono flex-1'>{lang}</span>
-              <span className='ml-auto font-semibold'>{data[i]}%</span>
+              <span className='ml-auto font-semibold'>
+                {data && data[i] && ((data[i] / total) * 100).toFixed(1)}%
+              </span>
               <span className='font-mono text-zinc-400 text-sm'>
-                {data && data[i] && Math.round(data[i] * 0.4)}h
+                {data && data[i] && data[i].toFixed(1)}h
               </span>
             </div>
           ))}
