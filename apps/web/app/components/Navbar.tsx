@@ -10,8 +10,11 @@ export const Navbar: React.FC = () => {
   const [token, setToken] = useState<any>(null);
 
   const logout = () => {
-    localStorage.removeItem('authToken');
-    router.push('/');
+    setTimeout(() => {
+      localStorage.removeItem('authToken');
+      router.push('/');
+    }, 2000);
+    return;
   };
 
   useEffect(() => {
@@ -26,7 +29,7 @@ export const Navbar: React.FC = () => {
       <div className='max-w-screen-2xl mx-auto px-8 py-5 flex items-center justify-between'>
         <div
           className='flex items-center gap-x-3 cursor-pointer'
-          onClick={() => router.push('/')}
+          onClick={() => (token ? router.push('/dashboard') : router.push('/'))}
         >
           <div className='w-9 h-9 rounded-2xl flex items-center justify-center text-white text-2xl rotate-12'>
             <Image src={codingIcon} alt='coding-icon' />

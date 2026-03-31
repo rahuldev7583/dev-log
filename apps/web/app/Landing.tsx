@@ -16,7 +16,7 @@ export default function Landing() {
     <div className='bg-zinc-950 text-white font-sans'>
       <Navbar />
 
-      <header className='hero-bg pt-16 pb-20'>
+      <header className='hero-bg pt-16 pb-20 mt-10'>
         <div className='max-w-screen-2xl mx-auto px-8 grid md:grid-cols-2 gap-12 items-center'>
           <div className='space-y-8'>
             <div className='inline-flex items-center gap-x-2 px-4 py-2 bg-white/5 border border-white/10 rounded-3xl text-sm font-medium'>
@@ -172,7 +172,7 @@ export default function Landing() {
         </div>
       </header>
 
-      <div className='border-b border-white/10 py-6 bg-zinc-900'>
+      <div className='border-b border-white/10 py-6 bg-zinc-900 mt-20'>
         <div className='max-w-screen-2xl mx-auto px-8 flex flex-wrap justify-center items-center gap-x-12 gap-y-6 text-zinc-400 text-sm'>
           <div className='flex items-center gap-x-2'>
             <i className='fa-brands fa-github text-xl' />
@@ -401,4 +401,4 @@ export default function Landing() {
       <Footer />
     </div>
   );
-};
+}

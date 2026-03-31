@@ -27,6 +27,7 @@ const AuthPage = () => {
         const token = res.data.extToken;
 
         setAuthStatus(true);
+        localStorage.removeItem('via');
         setTimeout(() => {
           router.push(
             `vscode://rahuldevkai75.devlog-extension/callback?extToken=${token}`,
