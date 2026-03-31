@@ -17,10 +17,17 @@ const AuthPage = () => {
   const token = searchParams.get('token');
 
   const handleGoogle = () => {
+    if (via) {
+      localStorage.setItem('via', via);
+    }
+
     window.location.href = `${SERVER_URL}/api/auth/google`;
   };
 
   const handleGithub = async () => {
+    if (via) {
+      localStorage.setItem('via', via);
+    }
     window.location.href = `${SERVER_URL}/api/auth/github`;
   };
 

@@ -59,8 +59,13 @@ const Dashboard = () => {
     typeof window !== 'undefined' ? localStorage.getItem('authToken') : null;
 
   useEffect(() => {
+    const via = localStorage.getItem('via');
     const tokenFromUrl = searchParams.get('token');
     let activeToken = tokenFromUrl || storedToken;
+
+    if (via == 'extension') {
+      router.push('/auth/external');
+    }
 
     if (!activeToken) {
       router.push('/auth');
