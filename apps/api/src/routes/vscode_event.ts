@@ -12,48 +12,72 @@ router.get('/', (req, res) => {
 });
 
 router.post('/add', validateData(vsCodeEventArr), async (req: any, res) => {
-  try {
-    const syncedEvent = [];
-    const eventArr = req.body;
+  const eventArr = req.body;
 
-    if (!eventArr) {
-      return res.status(400).json({ message: 'Empty events' });
+  if (!Array.isArray(eventArr) || eventArr.length === 0) {
+    return res.status(400).json({ message: 'Invalid or empty events array' });
+  }
+
+  const syncedEvent: any[] = [];
+  const failedEvent: any[] = [];
+
+  for (let i = 0; i < eventArr.length; i++) {
+    const rawEvent = eventArr[i];
+
+    const parsed = vsCodeEvent.safeParse(rawEvent);
+
+    if (!parsed.success) {
+      failedEvent.push({
+        session_id: rawEvent?.session_id,
+        status: 'validation_failed',
+        error: parsed.error.flatten(),
+      });
+      continue;
     }
 
-    for (let i = 0; i < eventArr.length; i++) {
-      const new_event = await prisma.vsCodeEvent.upsert({
+    const e = parsed.data;
+
+    try {
+      const newEvent = await prisma.vsCodeEvent.upsert({
         where: {
-          session_id: eventArr[i].session_id,
+          session_id: e.session_id,
         },
         update: {
-          time: eventArr[i].time,
+          time: e.time,
         },
         create: {
-          project_name: eventArr[i].project_name,
-          language: eventArr[i].language,
-          branch: eventArr[i].branch,
-          time: eventArr[i].time,
-          session_start: eventArr[i].session_start,
-          session_id: eventArr[i].session_id,
+          project_name: e.project_name,
+          language: e.language || 'unknown',
+          branch: e.branch || 'unknown',
+          time: e.time,
+          session_start: new Date(e.session_start),
+          session_id: e.session_id,
           userId: req.user.id,
         },
       });
 
       syncedEvent.push({
-        session_id: new_event.session_id,
-        sync_status: 'synced',
+        session_id: newEvent.session_id,
+        status: 'synced',
+      });
+    } catch (err: any) {
+      console.log(' DB error:', err.message);
+
+      failedEvent.push({
+        session_id: e.session_id,
+        status: 'db_failed',
+        error: err.message,
       });
     }
-
-    return res.json({
-      message: 'Vs Code event synced successfully',
-      syncedEvent,
-    });
-  } catch (error) {
-    console.log({ error });
-
-    return res.status(400).json({ message: 'Error ' });
   }
+
+  return res.json({
+    message: 'Vs Code event sync completed',
+    success_count: syncedEvent.length,
+    failed_count: failedEvent.length,
+    syncedEvent,
+    failedEvent,
+  });
 });
 
 user_router.get('/', async (req: any, res) => {
