@@ -24,6 +24,7 @@ export function activate(context: vscode.ExtensionContext) {
       .then((value) => value);
 
     if (!extToken) {
+      isAuthChecking = false;
       vscode.window
         .showWarningMessage(
           'Devlog: Please login to Devlog to get started!',
@@ -31,7 +32,7 @@ export function activate(context: vscode.ExtensionContext) {
         )
         .then((selection) => {
           if (selection === 'Login') {
-            vscode.commands.executeCommand('devlog-ext.login');
+            vscode.commands.executeCommand('devlog-extension.login');
           }
         });
       return;
@@ -68,19 +69,23 @@ export function activate(context: vscode.ExtensionContext) {
 
   if (!tokenStatus) {
     authCheck();
+  } else {
+    vscode.window.showInformationMessage(
+      'Welcome Back! You are already verified',
+    );
   }
 
   const disposable = vscode.commands.registerCommand(
-    'devlog-ext.helloWorld',
+    'devlog-extension.helloWorld',
     () => {
       vscode.window.showInformationMessage(
-        'Devlog:  Hello World from devlog-ext!',
+        'Devlog:  Hello World from devlog-extension!',
       );
     },
   );
 
   const loginDisposable = vscode.commands.registerCommand(
-    'devlog-ext.login',
+    'devlog-extension.login',
     async () => {
       const config = vscode.workspace.getConfiguration('devlogTracker');
       const APP_URL = config.get<string>('appUrl');
@@ -95,6 +100,18 @@ export function activate(context: vscode.ExtensionContext) {
           error?.response?.data?.message || 'Devlog: Login failed',
         );
       }
+    },
+  );
+
+  const resetDisposable = vscode.commands.registerCommand(
+    'devlog-extension.reset',
+    async () => {
+      await context.globalState.update('tokenVerification', false);
+      await context.secrets.delete('extToken');
+
+      vscode.window.showWarningMessage(
+        'Devlog extension has been reset. Please login again!',
+      );
     },
   );
 
@@ -113,6 +130,7 @@ export function activate(context: vscode.ExtensionContext) {
 
   context.subscriptions.push(disposable);
   context.subscriptions.push(loginDisposable);
+  context.subscriptions.push(resetDisposable);
 
   context.subscriptions.push(
     vscode.window.onDidChangeTextEditorSelection(() => {

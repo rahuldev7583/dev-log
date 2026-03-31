@@ -3,7 +3,7 @@
   "displayName": "Devlog Extension",
   "publisher": "rahuldevkai75",
   "description": "",
-  "version": "0.0.1",
+  "version": "0.0.3",
   "engines": {
     "vscode": "^1.110.0"
   },
@@ -13,7 +13,8 @@
   "activationEvents": [
     "onStartupFinished",
     "onCommand:devlog-ext.login",
-    "onUri"
+    "onUri",
+    "onCommand:devlog-extension.reset"
   ],
   "main": "./dist/extension.js",
   "contributes": {
@@ -33,10 +34,14 @@
       }
     },
     "commands": [
-      {
-        "command": "devlog-ext.login",
+        {
+        "command": "devlog-extension.login",
         "title": "Devlog: Login"
-      }
+    },
+    {
+        "command": "devlog-extension.reset",
+        "title": "Devlog: Reset"
+    }
     ]
   },
   "scripts": {
@@ -46,7 +51,7 @@
     "pretest": "pnpm run compile && pnpm run lint",
     "lint": "eslint src",
     "test": "vscode-test",
-     "build": "node build.js"
+    "build": "node build.js"
     
   },
   "dependencies": {

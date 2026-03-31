@@ -115,7 +115,11 @@ export class Database {
         .then((value) => value);
 
       if (!extToken) {
-        vscode.window.showInformationMessage('Devlog: Token not defined');
+        vscode.window.showInformationMessage('Devlog: Token not Provided');
+
+        vscode.window.showWarningMessage(
+          'Devlog! Please login again to save your coding session.',
+        );
 
         return;
       }
