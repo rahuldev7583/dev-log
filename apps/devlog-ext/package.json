@@ -3,19 +3,20 @@
   "displayName": "Devlog Extension",
   "publisher": "rahuldevkai75",
   "description": "",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "engines": {
     "vscode": "^1.110.0"
   },
   "categories": [
     "Other"
   ],
-  "activationEvents": [
-    "onStartupFinished",
-    "onCommand:devlog-ext.login",
-    "onUri",
-    "onCommand:devlog-extension.reset"
-  ],
+"activationEvents": [
+  "onCommand:devlog-extension.login",
+  "onCommand:devlog-extension.reset",
+  "onCommand:devlog-extension.helloWorld",
+  "onStartupFinished",
+  "onUri"
+],
   "main": "./dist/extension.js",
   "contributes": {
     "configuration": {
@@ -45,7 +46,7 @@
     ]
   },
   "scripts": {
-    "vscode:prepublish": "pnpm run compile",
+    "vscode:prepublish": "pnpm run build",
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
     "pretest": "pnpm run compile && pnpm run lint",

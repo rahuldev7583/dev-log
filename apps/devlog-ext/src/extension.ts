@@ -4,6 +4,7 @@ import { EventTracker } from './eventTracker';
 import axios from 'axios';
 
 export function activate(context: vscode.ExtensionContext) {
+  console.log('Devlog extension ACTIVATED');
   const database = new Database(context);
   const eventTracker = new EventTracker(database);
 
