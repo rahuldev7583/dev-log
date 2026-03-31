@@ -123,8 +123,10 @@ export class Database {
 
         return;
       }
+      console.log(`Syncing URL: ${API_URL}`);
 
       const events = this.events;
+      console.log({ events });
 
       if (events.length > 0) {
         const isISOFormat = (dateString: any) => {
@@ -171,9 +173,19 @@ export class Database {
           vscode.window.showInformationMessage(
             'Devlog: Event synced to Backend Successfully',
           );
+        } else {
+          console.log({ res });
+
+          vscode.window.showErrorMessage(
+            res.data?.message || 'Devlog:  Event Sync failed',
+          );
+
+          return;
         }
       }
     } catch (error: any) {
+      console.log({ error });
+
       vscode.window.showErrorMessage(
         error?.response?.data?.message || 'Devlog:  Event Sync failed',
       );
