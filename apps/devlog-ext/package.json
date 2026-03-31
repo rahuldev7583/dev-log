@@ -3,7 +3,7 @@
   "displayName": "Devlog Extension",
   "publisher": "rahuldevkai75",
   "description": "",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "engines": {
     "vscode": "^1.110.0"
   },
@@ -24,12 +24,12 @@
       "properties": {
         "devlogTracker.apiUrl": {
           "type": "string",
-          "default": "https://api.thelogger.dev",
+          "default": "http://localhost:5000",
           "description": "Backend API URL"
         },
         "devlogTracker.appUrl": {
           "type": "string",
-          "default": "https://thelogger.dev",
+          "default": "http://localhost:3000",
           "description": "Frontend APP URL"
         }
       }
@@ -42,6 +42,10 @@
     {
         "command": "devlog-extension.reset",
         "title": "Devlog: Reset"
+    },
+    {
+        "command": "devlog-extension.sync",
+        "title": "Devlog: Sync Now"
     }
     ]
   },

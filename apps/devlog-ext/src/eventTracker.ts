@@ -369,7 +369,7 @@ export class EventTracker implements vscode.Disposable {
 
     await this.branchCheckPromise;
 
-    vscode.window.showInformationMessage('Devlog: Branch changes Task running');
+    //vscode.window.showInformationMessage('Devlog: Branch changes Task running');
   }
 
   stopGitWatcher() {

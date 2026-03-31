@@ -116,6 +116,13 @@ export function activate(context: vscode.ExtensionContext) {
     },
   );
 
+  const syncNowDisposable = vscode.commands.registerCommand(
+    'devlog-extension.sync',
+    async () => {
+      await database.syncWithBackend();
+    },
+  );
+
   vscode.window.registerUriHandler({
     async handleUri(uri: vscode.Uri) {
       const token = new URLSearchParams(uri.query).get('extToken');
@@ -132,6 +139,7 @@ export function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(disposable);
   context.subscriptions.push(loginDisposable);
   context.subscriptions.push(resetDisposable);
+  context.subscriptions.push(syncNowDisposable);
 
   context.subscriptions.push(
     vscode.window.onDidChangeTextEditorSelection(() => {
