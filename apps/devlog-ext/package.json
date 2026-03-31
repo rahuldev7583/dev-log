@@ -3,7 +3,7 @@
   "displayName": "Devlog Extension",
   "publisher": "rahuldevkai75",
   "description": "",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "engines": {
     "vscode": "^1.110.0"
   },
@@ -24,12 +24,12 @@
       "properties": {
         "devlogTracker.apiUrl": {
           "type": "string",
-          "default": "http://localhost:5000",
+          "default": "https://api.thelogger.dev",
           "description": "Backend API URL"
         },
         "devlogTracker.appUrl": {
           "type": "string",
-          "default": "http://localhost:3000",
+          "default": "https://thelogger.dev",
           "description": "Frontend APP URL"
         }
       }

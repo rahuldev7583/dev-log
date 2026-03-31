@@ -4,16 +4,20 @@ import Image from 'next/image';
 import React, { useEffect, useState } from 'react';
 import codingIcon from './../../public/programming.png';
 import { useRouter } from 'next/navigation';
+import Loader from './Loader';
 
 export const Navbar: React.FC = () => {
   const router = useRouter();
   const [token, setToken] = useState<any>(null);
+  const [loading, setLoading] = useState(false);
 
   const logout = () => {
+    setLoading(true);
     setTimeout(() => {
       localStorage.removeItem('authToken');
+      setLoading(false);
       router.push('/');
-    }, 2000);
+    }, 1000);
     return;
   };
 
@@ -24,7 +28,9 @@ export const Navbar: React.FC = () => {
     }
   }, []);
 
-  return (
+  return loading ? (
+    <Loader />
+  ) : (
     <nav className='border-b border-white/10 bg-zinc-950 sticky top-0 z-50'>
       <div className='max-w-screen-2xl mx-auto px-8 py-5 flex items-center justify-between'>
         <div
